@@ -60,14 +60,14 @@ def _footprint(pf, ref, value, circuit, net_ids):
         ["property", "Value", value, ["at", 0, 0, 0],
          ["layer", Sym("F.Fab")], ["effects", ["font", ["size", 1, 1], ["thickness", 0.15]]]],
     ]
-    pin_net_ids = {}
+    pin_net_info = {}
     for net, pins in circuit.nets.items():
         nid = net_ids.get(net)
         if nid is None:
             continue
         for r, pin in pins:
             if r == ref and str(pin) in {p.number for p in fp.pads}:
-                pin_net_ids[str(pin)] = nid
+                pin_net_info[str(pin)] = (nid, net)
     for pad in fp.pads:
         pad_node = ["pad", pad.number, Sym("smd" if pad.ptype == "smd" else "thru_hole"),
                     Sym(pad.shape), ["at", pad.x, pad.y], ["size", pad.w, pad.h],
@@ -75,9 +75,10 @@ def _footprint(pf, ref, value, circuit, net_ids):
                     ["uuid", new_uuid()]]
         if pad.drill > 0:
             pad_node.append(["drill", pad.drill])
-        nid = pin_net_ids.get(pad.number)
-        if nid is not None:
-            pad_node.append(["net", nid])
+        net_info = pin_net_info.get(pad.number)
+        if net_info is not None:
+            nid, name = net_info
+            pad_node.append(["net", nid, name])
         out.append(pad_node)
     cx1, cy1, cx2, cy2 = fp.courtyard
     out.append(["fp_rect", ["start", cx1, cy1], ["end", cx2, cy2],

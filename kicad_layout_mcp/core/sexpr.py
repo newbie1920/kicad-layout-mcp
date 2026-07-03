@@ -44,7 +44,7 @@ def dumps(expr, indent: int = 0) -> str:
     if not isinstance(expr, (list, tuple)):
         return _fmt_atom(expr)
 
-    pad = "  " * indent
+    pad = "\t" * indent
     # Short lists with only atoms go on one line.
     if all(not isinstance(e, (list, tuple)) for e in expr):
         inner_parts = []
@@ -69,7 +69,7 @@ def dumps(expr, indent: int = 0) -> str:
     head = " ".join(head_atoms)
     parts.append(f"({head}" if head else "(")
     for e in expr[i:]:
-        parts.append("\n" + "  " * (indent + 1) + dumps(e, indent + 1))
+        parts.append("\n" + "\t" * (indent + 1) + dumps(e, indent + 1))
     parts.append("\n" + pad + ")")
     return "".join(parts)
 
