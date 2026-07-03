@@ -1,0 +1,64 @@
+{
+  "ok": true,
+  "circuit": "led_button",
+  "output_dir": "out/led_button",
+  "files": {
+    "schematic": "out/led_button\\led_button.kicad_sch",
+    "pcb": "out/led_button\\led_button.kicad_pcb",
+    "project": "out/led_button\\led_button.kicad_pro"
+  },
+  "bom": [
+    {
+      "quantity": 1,
+      "refs": [
+        "D1"
+      ],
+      "part": "LED",
+      "value": "RED",
+      "footprint": "LED_0805",
+      "description": "LED (pin 1 = K, pin 2 = A)"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "J1"
+      ],
+      "part": "CONN_1x02",
+      "value": "",
+      "footprint": "PinHeader_1x02",
+      "description": "Pin header 1x2"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "R1"
+      ],
+      "part": "R",
+      "value": "1k",
+      "footprint": "R_0603",
+      "description": "Resistor"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "SW1"
+      ],
+      "part": "SW_PUSH",
+      "value": "",
+      "footprint": "SW_PUSH_6mm",
+      "description": "Momentary push button"
+    }
+  ],
+  "drc": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  },
+  "pcb_stats": {
+    "track_count": 6,
+    "track_length_mm": 10.83,
+    "via_count": 0,
+    "unrouted": 0
+  },
+  "warnings": []
+}

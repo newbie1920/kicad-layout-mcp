@@ -1,0 +1,1365 @@
+("kicad_sch"
+  ("version" 20231120)
+  ("generator" "kicad_layout_mcp")
+  ("generator_version" "8.0")
+  ("uuid" "9747055d-406f-43b4-960e-58493262b965")
+  ("paper" "A4")
+  ("title_block"
+    ("title" "led_button")
+    ("comment" 1 "LED + resistor + button")
+  )
+  ("lib_symbols"
+    ("symbol" "kmcp:R"
+      ("pin_numbers" hide)
+      ("pin_names"
+        ("offset" 0)
+        hide
+      )
+      ("exclude_from_sim" no)
+      ("in_bom" yes)
+      ("on_board" yes)
+      ("property" "Reference" "R"
+        ("at" 0 3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Value" "R"
+        ("at" 0 -3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" "~"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "Resistor"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "R_0_1"
+        ("rectangle"
+          ("start" -1.27 2.54)
+          ("end" 1.27 -2.54)
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" background)
+          )
+        )
+      )
+      ("symbol" "R_1_1"
+        ("pin" passive line
+          ("at" 0 5.08 270)
+          ("length" 2.54)
+          ("name" "~"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+        ("pin" passive line
+          ("at" 0 -5.08 90)
+          ("length" 2.54)
+          ("name" "~"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+    ("symbol" "kmcp:LED"
+      ("pin_numbers" hide)
+      ("pin_names"
+        ("offset" 0)
+        hide
+      )
+      ("exclude_from_sim" no)
+      ("in_bom" yes)
+      ("on_board" yes)
+      ("property" "Reference" "D"
+        ("at" 0 3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Value" "LED"
+        ("at" 0 -3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" "~"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "LED (pin 1 = K, pin 2 = A)"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "LED_0_1"
+        ("rectangle"
+          ("start" -1.27 2.54)
+          ("end" 1.27 -2.54)
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" background)
+          )
+        )
+      )
+      ("symbol" "LED_1_1"
+        ("pin" passive line
+          ("at" 0 5.08 270)
+          ("length" 2.54)
+          ("name" "~"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+        ("pin" passive line
+          ("at" 0 -5.08 90)
+          ("length" 2.54)
+          ("name" "~"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+    ("symbol" "kmcp:SW_PUSH"
+      ("pin_names"
+        ("offset" 0.508)
+      )
+      ("exclude_from_sim" no)
+      ("in_bom" yes)
+      ("on_board" yes)
+      ("property" "Reference" "SW"
+        ("at" 0 3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Value" "SW_PUSH"
+        ("at" 0 -3.81 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" "~"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "Momentary push button"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "SW_PUSH_0_1"
+        ("rectangle"
+          ("start" -7.62 2.54)
+          ("end" 7.62 -2.54)
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" background)
+          )
+        )
+      )
+      ("symbol" "SW_PUSH_1_1"
+        ("pin" passive line
+          ("at" -10.16 0 0)
+          ("length" 2.54)
+          ("name" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+        ("pin" passive line
+          ("at" 10.16 0 180)
+          ("length" 2.54)
+          ("name" "2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+    ("symbol" "kmcp:CONN_1x02"
+      ("pin_names"
+        ("offset" 0.508)
+      )
+      ("exclude_from_sim" no)
+      ("in_bom" yes)
+      ("on_board" yes)
+      ("property" "Reference" "J"
+        ("at" 0 5.08 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Value" "CONN_1x02"
+        ("at" 0 -5.08 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" "~"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "Pin header 1x2"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "CONN_1x02_0_1"
+        ("rectangle"
+          ("start" -7.62 3.81)
+          ("end" 7.62 -3.81)
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" background)
+          )
+        )
+      )
+      ("symbol" "CONN_1x02_1_1"
+        ("pin" passive line
+          ("at" -10.16 1.27 0)
+          ("length" 2.54)
+          ("name" "P1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+        ("pin" passive line
+          ("at" -10.16 -1.27 0)
+          ("length" 2.54)
+          ("name" "P2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "2"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+    ("symbol" "kmcp_power:GND"
+      ("power")
+      ("pin_numbers" hide)
+      ("pin_names"
+        ("offset" 0)
+        hide
+      )
+      ("exclude_from_sim" yes)
+      ("in_bom" no)
+      ("on_board" yes)
+      ("property" "Reference" "#PWR"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Value" "GND"
+        ("at" 0 -3.556 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "Power symbol GND"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "GND_0_1"
+        ("polyline"
+          ("pts"
+            ("xy" 0 0)
+            ("xy" 0 -1.016)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+        ("polyline"
+          ("pts"
+            ("xy" -1.27 -1.016)
+            ("xy" 1.27 -1.016)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+        ("polyline"
+          ("pts"
+            ("xy" -0.762 -1.524)
+            ("xy" 0.762 -1.524)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+        ("polyline"
+          ("pts"
+            ("xy" -0.254 -2.032)
+            ("xy" 0.254 -2.032)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+      )
+      ("symbol" "GND_1_1"
+        ("pin" power_in line
+          ("at" 0 0 270)
+          ("length" 0)
+          ("name" "GND"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+    ("symbol" "kmcp_power:VCC"
+      ("power")
+      ("pin_numbers" hide)
+      ("pin_names"
+        ("offset" 0)
+        hide
+      )
+      ("exclude_from_sim" yes)
+      ("in_bom" no)
+      ("on_board" yes)
+      ("property" "Reference" "#PWR"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Value" "VCC"
+        ("at" 0 2.794 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+        )
+      )
+      ("property" "Footprint" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Datasheet" ""
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("property" "Description" "Power symbol VCC"
+        ("at" 0 0 0)
+        ("effects"
+          ("font"
+            ("size" 1.27 1.27)
+          )
+          hide
+        )
+      )
+      ("symbol" "VCC_0_1"
+        ("polyline"
+          ("pts"
+            ("xy" 0 0)
+            ("xy" 0 1.27)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+        ("polyline"
+          ("pts"
+            ("xy" -1.016 1.27)
+            ("xy" 1.016 1.27)
+          )
+          ("stroke"
+            ("width" 0.254)
+            ("type" default)
+          )
+          ("fill"
+            ("type" none)
+          )
+        )
+      )
+      ("symbol" "VCC_1_1"
+        ("pin" power_in line
+          ("at" 0 0 90)
+          ("length" 0)
+          ("name" "VCC"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+          ("number" "1"
+            ("effects"
+              ("font"
+                ("size" 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp:LED")
+    ("at" 22.86 39.37 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" yes)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "70a24726-1435-4dcb-96e0-493404f04342")
+    ("property" "Reference" "D1"
+      ("at" 24.93 38.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Value" "RED"
+      ("at" 24.93 40.57 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Footprint" "kmcp:LED_0805"
+      ("at" 22.86 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" "~"
+      ("at" 22.86 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" "LED (pin 1 = K, pin 2 = A)"
+      ("at" 22.86 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "2b2da89f-5587-4c09-b8ab-0e2f4f6a9076")
+    )
+    ("pin" "2"
+      ("uuid" "20a58862-769b-4c0d-9d23-f83268f9b1ff")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "D1")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp:R")
+    ("at" 34.29 39.37 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" yes)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "245d7883-9428-441c-814b-c708a2a02951")
+    ("property" "Reference" "R1"
+      ("at" 36.36 38.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Value" "1k"
+      ("at" 36.36 40.57 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Footprint" "kmcp:R_0603"
+      ("at" 34.29 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" "~"
+      ("at" 34.29 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" "Resistor"
+      ("at" 34.29 39.37 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "e60fc617-20e0-4d63-b114-e9cfa7b95cdc")
+    )
+    ("pin" "2"
+      ("uuid" "3c60b731-5a08-4240-9f9f-8b79be855b89")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "R1")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp:SW_PUSH")
+    ("at" 64.77 35.56 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" yes)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "696b917b-eb6c-45e6-b0b4-e5269179a49d")
+    ("property" "Reference" "SW1"
+      ("at" 57.15 31.42 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Value" "SW_PUSH"
+      ("at" 57.15 29.22 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Footprint" "kmcp:SW_PUSH_6mm"
+      ("at" 64.77 35.56 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" "~"
+      ("at" 64.77 35.56 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" "Momentary push button"
+      ("at" 64.77 35.56 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "c9e3c9ee-b154-48c8-af04-3ac85af3f3b2")
+    )
+    ("pin" "2"
+      ("uuid" "7cb062d9-c318-4bc4-9d7f-13f943cbfc3a")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "SW1")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp:CONN_1x02")
+    ("at" 92.71 36.83 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" yes)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "f7b20041-6c71-4cf3-9a81-569e9142c142")
+    ("property" "Reference" "J1"
+      ("at" 85.09 31.42 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Value" "CONN_1x02"
+      ("at" 85.09 29.22 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        ("justify" left)
+      )
+    )
+    ("property" "Footprint" "kmcp:PinHeader_1x02"
+      ("at" 92.71 36.83 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" "~"
+      ("at" 92.71 36.83 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" "Pin header 1x2"
+      ("at" 92.71 36.83 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "6be0a863-2d5a-4a75-a2d6-3b752bf5baed")
+    )
+    ("pin" "2"
+      ("uuid" "bb19e340-82eb-404e-b9b4-87a4fe3c8fe8")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "J1")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp_power:GND")
+    ("at" 77.47 38.1 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" no)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "c7ad212e-aabe-4e54-a3b1-4b3fdc6c7b3d")
+    ("property" "Reference" "#PWR0001"
+      ("at" 77.47 38.1 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Value" "GND"
+      ("at" 77.47 41.656 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+      )
+    )
+    ("property" "Footprint" ""
+      ("at" 77.47 38.1 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" ""
+      ("at" 77.47 38.1 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" ""
+      ("at" 77.47 38.1 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "58c4505c-f8c7-4b43-97c9-973d5fc53040")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "#PWR0001")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp_power:GND")
+    ("at" 80.01 40.64 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" no)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "14adc57e-49de-45f8-a939-f42b8e43234b")
+    ("property" "Reference" "#PWR0002"
+      ("at" 80.01 40.64 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Value" "GND"
+      ("at" 80.01 44.196 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+      )
+    )
+    ("property" "Footprint" ""
+      ("at" 80.01 40.64 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" ""
+      ("at" 80.01 40.64 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" ""
+      ("at" 80.01 40.64 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "b2771b94-23e8-4b41-8bf6-30b9213e459e")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "#PWR0002")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp_power:VCC")
+    ("at" 80.01 33.02 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" no)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "838e4cdb-ad61-4542-b2a7-dcdd0b405428")
+    ("property" "Reference" "#PWR0003"
+      ("at" 80.01 33.02 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Value" "VCC"
+      ("at" 80.01 30.226 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+      )
+    )
+    ("property" "Footprint" ""
+      ("at" 80.01 33.02 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" ""
+      ("at" 80.01 33.02 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" ""
+      ("at" 80.01 33.02 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "4f08de27-2ee8-43eb-a568-3c909d1ea46b")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "#PWR0003")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("symbol"
+    ("lib_id" "kmcp_power:VCC")
+    ("at" 34.29 34.29 0)
+    ("unit" 1)
+    ("exclude_from_sim" no)
+    ("in_bom" no)
+    ("on_board" yes)
+    ("dnp" no)
+    ("uuid" "39d2f462-306b-4b4f-b656-0f722395227d")
+    ("property" "Reference" "#PWR0004"
+      ("at" 34.29 34.29 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Value" "VCC"
+      ("at" 34.29 31.496 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+      )
+    )
+    ("property" "Footprint" ""
+      ("at" 34.29 34.29 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Datasheet" ""
+      ("at" 34.29 34.29 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("property" "Description" ""
+      ("at" 34.29 34.29 0)
+      ("effects"
+        ("font"
+          ("size" 1.27 1.27)
+        )
+        hide
+      )
+    )
+    ("pin" "1"
+      ("uuid" "64e4db0f-bc12-4cf7-98df-655c5ee70148")
+    )
+    ("instances"
+      ("project" "led_button"
+        ("path" "/9747055d-406f-43b4-960e-58493262b965"
+          ("reference" "#PWR0004")
+          ("unit" 1)
+        )
+      )
+    )
+  )
+  ("wire"
+    ("pts"
+      ("xy" 74.93 35.56)
+      ("xy" 77.47 35.56)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "65610760-432a-42f3-8912-04fb8df7a2ec")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 77.47 35.56)
+      ("xy" 77.47 38.1)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "55034c89-b555-4826-8eb4-c982c25170e8")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 82.55 38.1)
+      ("xy" 80.01 38.1)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "c173cbaf-a5bb-416e-b785-9bc1a7ce1616")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 80.01 38.1)
+      ("xy" 80.01 40.64)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "52f467df-ab0f-49ad-a079-2585e4a22454")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 34.29 44.45)
+      ("xy" 34.29 45.72)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "996ab8ee-421d-4a28-915f-109d8dd0c4a0")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 34.29 45.72)
+      ("xy" 22.86 45.72)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "efc67171-9350-45cd-a216-9b3e652c9bea")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 22.86 45.72)
+      ("xy" 22.86 44.45)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "80489b38-9de9-4524-9848-7d0c1350d26c")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 22.86 34.29)
+      ("xy" 22.86 33.02)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "284b7139-a643-4611-a677-63367d18a968")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 22.86 33.02)
+      ("xy" 53.34 33.02)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "dbf73416-1702-4ba1-b743-4d58c4302049")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 53.34 33.02)
+      ("xy" 53.34 35.56)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "8722587d-0947-4910-ad5c-55efdae92e80")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 53.34 35.56)
+      ("xy" 54.61 35.56)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "edfea089-d6d2-494d-807d-7140b527dbff")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 82.55 35.56)
+      ("xy" 80.01 35.56)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "3a87a55f-b647-4fbd-b24e-75e6916db3b3")
+  )
+  ("wire"
+    ("pts"
+      ("xy" 80.01 35.56)
+      ("xy" 80.01 33.02)
+    )
+    ("stroke"
+      ("width" 0)
+      ("type" default)
+    )
+    ("uuid" "b3737a08-f5b2-4e25-88cc-b53e1d5e28f0")
+  )
+  ("rectangle"
+    ("start" 17 20)
+    ("end" 109.02 53.86)
+    ("stroke"
+      ("width" 0.127)
+      ("type" dash)
+    )
+    ("fill"
+      ("type" none)
+    )
+    ("uuid" "8e866798-04e9-4b20-be0b-742e5dbb35b2")
+  )
+  ("text" "IO"
+    ("exclude_from_sim" no)
+    ("at" 18.5 23 0)
+    ("effects"
+      ("font"
+        ("size" 2 2)
+        bold
+      )
+      ("justify" left)
+    )
+    ("uuid" "5d44f9b3-c360-48b4-88b7-18eb2b97e4ca")
+  )
+  ("sheet_instances"
+    ("path" "/"
+      ("page" "1")
+    )
+  )
+)

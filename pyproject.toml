@@ -1,0 +1,23 @@
+[project]
+name = "kicad-layout-mcp"
+version = "0.1.0"
+description = "MCP server that lets AI models design clean, production-ready KiCad schematics and PCBs. AI describes the circuit semantically; all geometry (placement, routing, labels) is computed by algorithms."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "mcp>=1.2.0",
+]
+
+[project.optional-dependencies]
+test = ["kiutils>=1.4.8", "pytest>=8.0"]
+
+[project.scripts]
+kicad-layout-mcp = "kicad_layout_mcp.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["kicad_layout_mcp*"]

@@ -1,0 +1,112 @@
+{
+  "ok": true,
+  "circuit": "esp32_regulator",
+  "output_dir": "out/esp32_regulator",
+  "files": {
+    "schematic": "out/esp32_regulator\\esp32_regulator.kicad_sch",
+    "pcb": "out/esp32_regulator\\esp32_regulator.kicad_pcb",
+    "project": "out/esp32_regulator\\esp32_regulator.kicad_pro"
+  },
+  "bom": [
+    {
+      "quantity": 2,
+      "refs": [
+        "C1",
+        "C3"
+      ],
+      "part": "C",
+      "value": "10uF",
+      "footprint": "C_0603",
+      "description": "Ceramic capacitor"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "C2"
+      ],
+      "part": "C",
+      "value": "100nF",
+      "footprint": "C_0603",
+      "description": "Ceramic capacitor"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "J1"
+      ],
+      "part": "CONN_1x02",
+      "value": "",
+      "footprint": "PinHeader_1x02",
+      "description": "Pin header 1x2"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "R1"
+      ],
+      "part": "R",
+      "value": "10k",
+      "footprint": "R_0603",
+      "description": "Resistor"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "U1"
+      ],
+      "part": "AMS1117-3.3",
+      "value": "",
+      "footprint": "SOT-223",
+      "description": "LDO 3.3V 1A, SOT-223 (with tab=VOUT pad 4)"
+    },
+    {
+      "quantity": 1,
+      "refs": [
+        "U2"
+      ],
+      "part": "ESP32-WROOM-32",
+      "value": "",
+      "footprint": "ESP32-WROOM-32",
+      "description": "ESP32-WROOM-32 WiFi/BT module (flash pins 17-22 omitted)"
+    }
+  ],
+  "drc": {
+    "ok": true,
+    "errors": [],
+    "warnings": []
+  },
+  "pcb_stats": {
+    "track_count": 4,
+    "track_length_mm": 17.0,
+    "via_count": 0,
+    "unrouted": 5
+  },
+  "warnings": [
+    "Pin 4 (IO36/SVP) of U2 is floating (not on any net).",
+    "Pin 5 (IO39/SVN) of U2 is floating (not on any net).",
+    "Pin 6 (IO34) of U2 is floating (not on any net).",
+    "Pin 7 (IO35) of U2 is floating (not on any net).",
+    "Pin 8 (IO32) of U2 is floating (not on any net).",
+    "Pin 9 (IO33) of U2 is floating (not on any net).",
+    "Pin 10 (IO25) of U2 is floating (not on any net).",
+    "Pin 11 (IO26) of U2 is floating (not on any net).",
+    "Pin 12 (IO27) of U2 is floating (not on any net).",
+    "Pin 13 (IO14) of U2 is floating (not on any net).",
+    "Pin 14 (IO12) of U2 is floating (not on any net).",
+    "Pin 16 (IO13) of U2 is floating (not on any net).",
+    "Pin 23 (IO15) of U2 is floating (not on any net).",
+    "Pin 37 (IO23) of U2 is floating (not on any net).",
+    "Pin 36 (IO22) of U2 is floating (not on any net).",
+    "Pin 35 (TXD0/IO1) of U2 is floating (not on any net).",
+    "Pin 34 (RXD0/IO3) of U2 is floating (not on any net).",
+    "Pin 33 (IO21) of U2 is floating (not on any net).",
+    "Pin 30 (IO18) of U2 is floating (not on any net).",
+    "Pin 31 (IO19) of U2 is floating (not on any net).",
+    "Pin 29 (IO5) of U2 is floating (not on any net).",
+    "Pin 28 (IO17) of U2 is floating (not on any net).",
+    "Pin 27 (IO16) of U2 is floating (not on any net).",
+    "Pin 26 (IO4) of U2 is floating (not on any net).",
+    "Pin 24 (IO2) of U2 is floating (not on any net).",
+    "Pin 25 (IO0) of U2 is floating (not on any net)."
+  ]
+}
