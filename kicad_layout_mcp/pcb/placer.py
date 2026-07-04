@@ -121,6 +121,27 @@ def _place_edge_stack(circuit: Circuit, refs: list[str], layout: PCBLayout,
             cursor = start  # overflow, will overlap but keep within edge
 
 
+
+
+def _place_relay_drivers(circuit: Circuit, refs: list[str], layout: PCBLayout,
+                         x1: float, x2: float, y_top: float):
+    """Pack relay drivers in a row just below the relay terminals."""
+    cursor_x = x1
+    for ref in sorted(refs):
+        comp = circuit.components[ref]
+        fp = resolve_footprint(comp.part, comp.footprint)
+        pf = PlacedFootprint(ref=ref, fp=fp, angle=0, block=comp.block)
+        cx1, cy1, cx2, cy2 = pf.fp.courtyard
+        w, h = cx2 - cx1, cy2 - cy1
+        if cursor_x + w + GAP > x2:
+            cursor_x = x1
+            y_top -= (h + GAP)
+        pf.x = snap(cursor_x - cx1)
+        # place top edge of courtyard at y_top
+        pf.y = snap(y_top - cy2)
+        layout.placed[ref] = pf
+        cursor_x += w + GAP
+
 def _place_group(circuit: Circuit, refs: list[str], layout: PCBLayout,
                  x1: float, y1: float, x2: float, y2: float):
     cursor_x = x1
@@ -222,8 +243,8 @@ def _auto_board_size(layout: PCBLayout, margin: float = BOARD_MARGIN):
 
 def place_pcb(circuit: Circuit) -> PCBLayout:
     # initial board large; auto size later
-    bw = 240.0
-    bh = 180.0
+    bw = 260.0
+    bh = 200.0
     layout = PCBLayout(board_x2=bw, board_y2=bh)
     comps = circuit.components
 
@@ -265,27 +286,27 @@ def place_pcb(circuit: Circuit) -> PCBLayout:
         pf.y = snap(bh / 2 - (cy1 + cy2) / 2)
         layout.placed[mcu_ref] = pf
 
-    # Power IC + passives bottom-left
-    _place_group(circuit, other_refs("power"), layout, 55.0, BOARD_MARGIN, 140.0, 45.0)
+    # Power IC + passives bottom-left, close to J1
+    _place_group(circuit, other_refs("power"), layout, 55.0, BOARD_MARGIN, 150.0, 60.0)
 
-    # Relay drivers top-center
-    _place_group(circuit, other_refs("relay"), layout, 55.0, bh - 90.0, bw - 55.0, bh - 28.0)
+    # Relay block: drivers directly under relay terminals
+    _place_relay_drivers(circuit, other_refs("relay"), layout, 45.0, bw - 45.0, bh - 28.0)
 
-    # Comm ICs right-center
-    _place_group(circuit, other_refs("rs485", "eth", "cell"), layout, bw - 145.0, 50.0, bw - 55.0, bh - 95.0)
+    # Comm block: ICs to the left of right-edge connectors
+    _place_group(circuit, other_refs("rs485", "eth", "cell"), layout, bw - 170.0, 45.0, bw - 55.0, bh - 95.0)
 
-    # Analog front-end left-center
-    _place_group(circuit, other_refs("ai") + other_refs("di"), layout, 55.0, 50.0, 140.0, bh - 95.0)
+    # Analog front-end left-center, near DI/AI terminals
+    _place_group(circuit, other_refs("ai") + other_refs("di"), layout, 55.0, 45.0, 150.0, bh - 95.0)
 
     # MCU support around MCU
     mcu_support = [r for r in refs("mcu") if r not in layout.placed]
-    _place_group(circuit, mcu_support, layout, 140.0, 50.0, bw - 145.0, bh - 95.0)
+    _place_group(circuit, mcu_support, layout, 150.0, 60.0, bw - 170.0, bh - 95.0)
 
     # RTC bottom-right
-    _place_group(circuit, refs("rtc"), layout, bw - 145.0, BOARD_MARGIN, bw - 55.0, 45.0)
+    _place_group(circuit, refs("rtc"), layout, bw - 170.0, BOARD_MARGIN, bw - 55.0, 45.0)
 
-    # Indicators top-right
-    _place_group(circuit, refs("ind"), layout, bw - 100.0, bh - 50.0, bw - 55.0, bh - 28.0)
+    # Indicators top-right, near relay/comm
+    _place_group(circuit, refs("ind"), layout, bw - 120.0, bh - 50.0, bw - 55.0, bh - 28.0)
 
     # leftovers
     for ref, comp in comps.items():
