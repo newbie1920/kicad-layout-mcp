@@ -19,8 +19,8 @@ from ..library.parts import GRID, SymbolDef, get_symbol
 
 HALF_GRID = 1.27
 CHAR_W = 1.1          # approx label char width at 1.27mm font
-LABEL_STUB = 7.62     # wire stub length before a net label (keep labels off pins)
-V_TEXT_SPACE = 7.62   # reserved above symbol for ref/value text
+LABEL_STUB = 2.54     # wire stub length before a net label (keep labels off pins)
+V_TEXT_SPACE = 5.08   # reserved above symbol for ref/value text
 BODY_MARGIN = 1.27    # extra air gap around symbol body
 
 
@@ -142,72 +142,137 @@ def place_schematic(circuit: Circuit) -> SchematicLayout:
     order = [b for b in circuit.block_order if b in blocks]
     order += [b for b in blocks if b not in order]
 
-    margin = 20.0
-    block_gap = 12.0
-    cursor_x = margin
-    max_row_h = 0.0
-    cursor_y = margin + 8.0   # leave room for block title
+    margin = 15.0
+    block_gap = 6.0
+    block_pad = 3.0   # extra margin inside blue rectangle around components
 
-    # Estimate a reasonable max block-column height from total content.
-    total_h = 0.0
-    for b in order:
-        for c in blocks[b]:
-            cb = _clearance(circuit, c.ref)
-            total_h += (cb[3] - cb[1]) + 4.0
-    target_col_h = max(80.0, min(180.0, total_h / max(1, len(order)) * 1.2))
 
+    # Step 1: build each block locally and measure its tight padded bbox.
+    local_blocks: dict[str, dict] = {}
     for b in order:
         refs = [c.ref for c in blocks[b]]
         refs = _bfs_order(circuit, refs)
-
-        # Estimate a reasonable block width for this block.
-        block_w_est = sum((_clearance(circuit, r)[2] - _clearance(circuit, r)[0]) + 6.0 for r in refs)
-        target_block_w = max(90.0, min(280.0, block_w_est))
-
-        # Shelf-pack inside this block.
-        shelf_x = cursor_x
-        shelf_y = cursor_y
-        shelf_h = 0.0
-        block_x2 = cursor_x
-        block_y2 = cursor_y
+        shelf_x, shelf_y, shelf_h = 0.0, 0.0, 0.0
+        placed_local: list[tuple] = []
+        max_inner_w = 110.0
         for ref in refs:
             comp = circuit.components[ref]
             sym = get_symbol(comp.part)
             cb = _clearance(circuit, ref)
             w = cb[2] - cb[0]
             h = cb[3] - cb[1]
-            if shelf_x > cursor_x and shelf_x + w > cursor_x + target_block_w and shelf_y + shelf_h + h < cursor_y + target_col_h:
-                # wrap shelf
-                shelf_y += shelf_h + 6.0
-                shelf_x = cursor_x
+            if shelf_x > 0 and shelf_x + w > max_inner_w:
+                shelf_y += shelf_h + 2.54
+                shelf_x = 0.0
                 shelf_h = 0.0
-            ps = PlacedSymbol(ref=ref, symbol=sym, block=b, clear=cb)
-            ps.x = snap(shelf_x - cb[0])
-            ps.y = snap(shelf_y - cb[1])
-            layout.placed[ref] = ps
-            shelf_x += w + 6.0
+            lx = snap(shelf_x - cb[0])
+            ly = snap(shelf_y - cb[1])
+            placed_local.append((ref, sym, cb, lx, ly))
+            shelf_x += w + 2.54
             shelf_h = max(shelf_h, h)
-            block_x2 = max(block_x2, shelf_x)
-            block_y2 = max(block_y2, shelf_y + shelf_h)
+        if not placed_local:
+            local_blocks[b] = {"refs": [], "w": 0.0, "h": 0.0, "x1": 0.0, "y1": 0.0}
+            continue
+        x1 = min(lx + cb[0] for _, _, cb, lx, ly in placed_local) - block_pad
+        y1 = min(ly + cb[1] for _, _, cb, lx, ly in placed_local) - block_pad
+        x2 = max(lx + cb[2] for _, _, cb, lx, ly in placed_local) + block_pad
+        y2 = max(ly + cb[3] for _, _, cb, lx, ly in placed_local) + block_pad
+        local_blocks[b] = {
+            "refs": placed_local,
+            "w": x2 - x1,
+            "h": y2 - y1,
+            "x1": x1,
+            "y1": y1,
+        }
 
-        layout.blocks[b] = (cursor_x - 3.0, cursor_y - 8.0, block_x2 + 3.0, block_y2 + 3.0)
-        cursor_x = block_x2 + block_gap
-        max_row_h = max(max_row_h, block_y2 - cursor_y)
+    # Step 2: choose the smallest paper size that fits all blocks + reserved title-block corner.
+    max_block_w = max((lb["w"] for lb in local_blocks.values()), default=0.0)
+    max_block_h = max((lb["h"] for lb in local_blocks.values()), default=0.0)
 
-    # Resolve any residual overlaps defensively (should not happen).
-    _push_apart(layout)
+    title_w = 0.0
+    title_h = margin
 
-    # Sheet size: pick smallest standard sheet that fits.
-    x2 = max(pb[2] for pb in (p.clear_box() for p in layout.placed.values()))
-    y2 = max(pb[3] for pb in (p.clear_box() for p in layout.placed.values()))
-    for name, w, h in [("A4", 297, 210), ("A3", 420, 297), ("A2", 594, 420), ("A1", 841, 594)]:
-        if x2 + margin <= w and y2 + margin <= h:
-            layout.sheet_w, layout.sheet_h = w, h
+    def pack_for_size(w, h):
+        # Bottom-right title-block corner is reserved. Rows whose bottom is inside the
+        # title zone may only use the left zone; rows entirely above may use full width.
+        full_w = w - 2 * margin
+        left_w = max(50.0, full_w - title_w)
+        sorted_blocks = sorted(order, key=lambda b: local_blocks[b]["h"], reverse=True)
+        rows: list[list[str]] = []
+        row_w: list[float] = []
+        row_h: list[float] = []
+        row_top_y: list[float] = []
+        # Track vertical cursor to decide row zone.
+        cursor = h - margin
+        for b in sorted_blocks:
+            lb = local_blocks[b]
+            bw = lb["w"] + block_gap
+            placed = False
+            # Try existing rows first
+            for i, r in enumerate(rows):
+                in_title_zone = (row_top_y[i] - row_h[i] < title_h)
+                limit = left_w if in_title_zone else full_w
+                if row_w[i] + bw <= limit:
+                    r.append(b)
+                    row_w[i] += bw
+                    row_h[i] = max(row_h[i], lb["h"])
+                    placed = True
+                    break
+            if not placed:
+                # New row below current cursor
+                new_h = lb["h"]
+                in_title_zone = (cursor - new_h < title_h)
+                limit = left_w if in_title_zone else full_w
+                if bw > limit:
+                    # cannot fit even in top zone -> fail
+                    return rows, [], title_h, False
+                rows.append([b])
+                row_w.append(bw)
+                row_h.append(new_h)
+                row_top_y.append(cursor)
+                cursor -= new_h + block_gap
+        total_h = (h - margin) - (cursor - block_gap) if rows else 0
+        fits = (max(row_w, default=0) <= full_w) and (total_h <= h - title_h)
+        return rows, row_h, title_h, fits
+
+    paper_options = [("A3", 420, 297), ("A2", 594, 420), ("A1", 841, 594), ("A0", 1189, 841)]
+    chosen_rows = None
+    chosen_row_h = None
+    chosen_title_h = None
+    for name, pw, ph in paper_options:
+        rows, rh, th, fits = pack_for_size(pw, ph)
+        if fits:
             layout.paper = name
+            layout.sheet_w, layout.sheet_h = pw, ph
+            chosen_rows, chosen_row_h, chosen_title_h = rows, rh, th
             break
-    else:
-        layout.paper = "A1"
-        layout.sheet_w, layout.sheet_h = 841, 594
+    if chosen_rows is None:
+        # fallback to A0 even if overflow
+        layout.paper = "A0"
+        layout.sheet_w, layout.sheet_h = 1189, 841
+        chosen_rows, chosen_row_h, chosen_title_h, _ = pack_for_size(1189, 841)
+
+    # Step 3: place rows from top down (KiCad y increases upward).
+    cursor_y = layout.sheet_h - margin
+    for r, h in zip(chosen_rows, chosen_row_h):
+        cursor_x = margin
+        row_top = cursor_y
+        row_bottom = max(chosen_title_h, cursor_y - h)
+        for b in r:
+            lb = local_blocks[b]
+            bx = cursor_x - lb["x1"]
+            by = row_top - lb["y1"] - lb["h"]
+            for ref, sym, cb, lx, ly in lb["refs"]:
+                ps = PlacedSymbol(ref=ref, symbol=sym, block=b, clear=cb)
+                ps.x = snap(bx + lx)
+                ps.y = snap(by + ly)
+                layout.placed[ref] = ps
+            # Blue rectangle exactly matches padded local bbox at global origin.
+            layout.blocks[b] = (bx + lb["x1"], by + lb["y1"],
+                                bx + lb["x1"] + lb["w"], by + lb["y1"] + lb["h"])
+            cursor_x += lb["w"] + block_gap
+        cursor_y = row_bottom - block_gap
+
     return layout
 
 

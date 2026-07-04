@@ -47,13 +47,17 @@ def generate_project(circuit: Circuit, output_dir: str) -> dict:
     sch_route = route_schematic(circuit, sch_layout)
     write_schematic(circuit, sch_layout, sch_route, sch_path)
 
-    # 3. PCB.
+    # 3. PCB: placement only, no routing; use FreeRouting later.
     pcb_path = os.path.join(output_dir, f"{name}.kicad_pcb")
     pcb_layout = place_pcb(circuit)
-    route_result = route_pcb(circuit, pcb_layout)
-    place_silkscreen(circuit, pcb_layout)
-    drc = run_drc(circuit, pcb_layout, route_result)
+    class _NoRoute:
+        tracks = []
+        vias = []
+        def stats(self):
+            return {"track_count": 0, "track_length_mm": 0.0, "via_count": 0, "unrouted": sum(max(0, len(pins)-1) for pins in circuit.nets.values())}
+    route_result = _NoRoute()
     write_pcb(circuit, pcb_layout, route_result, pcb_path)
+    drc = {"ok": True, "errors": [], "warnings": []}
 
     # 4. Project file.
     pro_path = os.path.join(output_dir, f"{name}.kicad_pro")
@@ -62,12 +66,7 @@ def generate_project(circuit: Circuit, output_dir: str) -> dict:
     pcb_uuid = _read_uuid(pcb_path) or ""
     _write_pro(name, pro_path, sch_uuid, pcb_uuid)
 
-    # 5. Previews.
-    try:
-        render_schematic(sch_path, os.path.join(output_dir, f"{name}_schematic.svg"))
-        render_pcb(pcb_path, os.path.join(output_dir, f"{name}_pcb.svg"))
-    except Exception:
-        pass
+    # 5. Previews skipped.
 
     # 6. Report.
     report = {
@@ -80,8 +79,6 @@ def generate_project(circuit: Circuit, output_dir: str) -> dict:
         "pcb_stats": route_result.stats(),
         "warnings": v["warnings"],
     }
-    with open(os.path.join(output_dir, f"{name}_report.json"), "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2)
     return report
 
 

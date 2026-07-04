@@ -128,9 +128,6 @@ def write_schematic(circuit: Circuit, layout: SchematicLayout, routing: SchRouti
            ["generator_version", "9.99"],
            ["uuid", root_uuid],
            ["paper", getattr(layout, "paper", "A3")],
-           ["title_block",
-            ["title", circuit.name],
-            ["comment", 1, circuit.description[:200] if circuit.description else ""]],
            lib_symbols]
 
     # Text placement for reference/value.
