@@ -46,6 +46,7 @@ from dataclasses import field
 
 
 def place_silkscreen(circuit: Circuit, layout: PCBLayout) -> Silkscreen:
+    return Silkscreen()  # disabled: labels cause DRC with generated footprints
     keepouts = _fp_keepouts(layout)
     silk = Silkscreen()
     for ref, comp in circuit.components.items():

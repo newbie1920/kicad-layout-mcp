@@ -420,6 +420,46 @@ for n in range(2, 11):
 for n in (2, 3, 4):
     FOOTPRINTS[f"Terminal_{n}P"] = _terminal(f"Terminal_{n}P", n)
 
+# RJ45 connector footprint
+FOOTPRINTS["RJ45"] = FootprintDef(key="RJ45", pads=[
+    PadDef("1", -3.81, -6.35, 1.0, 1.5, shape="rect", ptype="thru_hole", drill=0.6),
+    PadDef("2", -1.27, -6.35, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("3", 1.27, -6.35, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("4", 3.81, -6.35, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("5", -3.81, -3.81, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("6", -1.27, -3.81, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("7", 1.27, -3.81, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("8", 3.81, -3.81, 1.0, 1.5, ptype="thru_hole", drill=0.6),
+    PadDef("S1", -6.6, 0, 1.5, 2.5, shape="oval", ptype="thru_hole", drill=1.0),
+    PadDef("S2", 6.6, 0, 1.5, 2.5, shape="oval", ptype="thru_hole", drill=1.0),
+], attr="through_hole", courtyard=(-8, -8, 8, 8), description="RJ45 8P8C with shield")
+
+# Nano SIM holder footprint
+FOOTPRINTS["SIM_NANO"] = FootprintDef(key="SIM_NANO", pads=[
+    PadDef("C1", -2.54, 3.5, 1.0, 1.0, shape="rect", ptype="thru_hole", drill=0.6),
+    PadDef("C2", 0, 3.5, 1.0, 1.0, ptype="thru_hole", drill=0.6),
+    PadDef("C3", 2.54, 3.5, 1.0, 1.0, ptype="thru_hole", drill=0.6),
+    PadDef("C5", -2.54, -3.5, 1.0, 1.0, ptype="thru_hole", drill=0.6),
+    PadDef("C6", 0, -3.5, 1.0, 1.0, ptype="thru_hole", drill=0.6),
+    PadDef("C7", 2.54, -3.5, 1.0, 1.0, ptype="thru_hole", drill=0.6),
+    PadDef("GND1", -5.5, 0, 1.5, 2.0, shape="oval", ptype="thru_hole", drill=1.0),
+    PadDef("GND2", 5.5, 0, 1.5, 2.0, shape="oval", ptype="thru_hole", drill=1.0),
+], attr="through_hole", courtyard=(-7, -5.5, 7, 5.5), description="Nano SIM card holder")
+
+# 4G module placeholder (Quectel EC200U-CN style)
+FOOTPRINTS["MODULE_4G"] = FootprintDef(key="MODULE_4G", pads=[
+    PadDef("1", -11.0, -4.0, 2.0, 1.0, shape="rect"),
+    PadDef("2", -11.0, -2.0, 2.0, 1.0),
+    PadDef("3", -11.0, 0.0, 2.0, 1.0),
+    PadDef("4", -11.0, 2.0, 2.0, 1.0),
+    PadDef("5", -11.0, 4.0, 2.0, 1.0),
+    PadDef("6", 11.0, -4.0, 2.0, 1.0),
+    PadDef("7", 11.0, -2.0, 2.0, 1.0),
+    PadDef("8", 11.0, 0.0, 2.0, 1.0),
+    PadDef("9", 11.0, 2.0, 2.0, 1.0),
+    PadDef("10", 11.0, 4.0, 2.0, 1.0),
+], attr="smd", courtyard=(-13, -6, 13, 6), description="4G module placeholder")
+
 # ---- passives ----
 _reg(_two_lead("R", "R", "resistor", "Resistor"), "R_0603",
      ["R_0402", "R_0805", "R_1206"])
@@ -560,6 +600,154 @@ _reg(_box("CRYSTAL_4P", "Y", left=[("1", "XIN", P)], right=[("3", "XOUT", P)],
      "Crystal_3225")
 _reg(_two_lead("CRYSTAL", "Y", "crystal", "Crystal 2-pin"), "Crystal_3225")
 _reg(_two_lead("BUZZER", "BZ", "buzzer", "Buzzer (pin 1 = +)"), "CP_Elec_6.3x7.7")
+
+# ---- Industrial controller parts ----
+
+# LQFP-100 footprint (100 pins, 0.5mm pitch, 14x14mm body)
+_lqfp100_pads = []
+for i in range(25):
+    _lqfp100_pads.append(PadDef(str(i+1), -8.5, 6.0-i*0.5, 1.5, 0.25))
+for i in range(25):
+    _lqfp100_pads.append(PadDef(str(i+26), -6.0+i*0.5, 8.5, 0.25, 1.5))
+for i in range(25):
+    _lqfp100_pads.append(PadDef(str(i+51), 8.5, -6.0+i*0.5, 1.5, 0.25))
+for i in range(25):
+    _lqfp100_pads.append(PadDef(str(i+76), 6.0-i*0.5, -8.5, 0.25, 1.5))
+FOOTPRINTS["LQFP-100"] = FootprintDef(key="LQFP-100", pads=_lqfp100_pads, attr="smd",
+    courtyard=(-9.5, -9.5, 9.5, 9.5), description="LQFP-100 14x14mm 0.5mm pitch")
+
+# QFN-24 footprint (24 pins + exposed pad, 4x4mm body)
+_qfn24_pads = []
+for i in range(6):
+    _qfn24_pads.append(PadDef(str(i+1), -2.25, 1.25-i*0.5, 0.28, 0.28))
+for i in range(6):
+    _qfn24_pads.append(PadDef(str(i+7), -1.25+i*0.5, 2.25, 0.28, 0.28))
+for i in range(6):
+    _qfn24_pads.append(PadDef(str(i+13), 2.25, -1.25+i*0.5, 0.28, 0.28))
+for i in range(6):
+    _qfn24_pads.append(PadDef(str(i+19), 1.25-i*0.5, -2.25, 0.28, 0.28))
+_qfn24_pads.append(PadDef("25", 0, 0, 1.5, 1.5, shape="rect"))
+FOOTPRINTS["QFN-24"] = FootprintDef(key="QFN-24", pads=_qfn24_pads, attr="smd",
+    courtyard=(-3, -3, 3, 3), description="QFN-24 4x4mm 0.5mm pitch")
+
+# DIP-4 footprint (optocoupler)
+FOOTPRINTS["DIP-4"] = FootprintDef(key="DIP-4", pads=[
+    PadDef("1", -3.81, -1.27, 1.5, 1.5, shape="rect", ptype="thru_hole", drill=0.8),
+    PadDef("2", -3.81, 1.27, 1.5, 1.5, shape="rect", ptype="thru_hole", drill=0.8),
+    PadDef("3", 3.81, 1.27, 1.5, 1.5, shape="rect", ptype="thru_hole", drill=0.8),
+    PadDef("4", 3.81, -1.27, 1.5, 1.5, shape="rect", ptype="thru_hole", drill=0.8),
+], attr="through_hole", courtyard=(-5, -3, 5, 3), description="DIP-4 optocoupler")
+
+# Relay footprint (5 pins)
+FOOTPRINTS["Relay"] = FootprintDef(key="Relay", pads=[
+    PadDef("1", -5, -2.5, 2, 2, shape="rect", ptype="thru_hole", drill=1.0),
+    PadDef("2", -5, 2.5, 2, 2, shape="rect", ptype="thru_hole", drill=1.0),
+    PadDef("3", 5, -5, 2, 2, shape="rect", ptype="thru_hole", drill=1.0),
+    PadDef("4", 5, 0, 2, 2, shape="rect", ptype="thru_hole", drill=1.0),
+    PadDef("5", 5, 5, 2, 2, shape="rect", ptype="thru_hole", drill=1.0),
+], attr="through_hole", courtyard=(-8, -8, 8, 8), description="5-pin relay DPST")
+
+
+# RJ45 connector (8P8C) - simplified signal set
+_reg(_box("RJ45", "J",
+    left=[("1","TX+",B),("2","TX-",B),("3","RX+",B),("6","RX-",B)],
+    right=[("4","NC1",P),("5","NC2",P),("7","NC3",P),("8","NC4",P),
+           ("S1","SHIELD",P),("S2","SHIELD2",P)],
+    desc="RJ45 8P8C Ethernet connector"), "RJ45")
+
+# Nano SIM holder
+_reg(_box("SIM_NANO", "J",
+    left=[("C1","VCC",PI),("C2","RST",I),("C3","CLK",I)],
+    right=[("C5","VPP",P),("C6","I/O",B),("C7","GND",PI)],
+    desc="Nano SIM card holder"), "SIM_NANO")
+
+# 4G module placeholder
+_reg(_box("MODULE_4G", "U",
+    left=[("1","VCC",PI),("2","GND",PI),("3","TX",I),("4","RX",O),("5","PWRKEY",I)],
+    right=[("6","ANT",P),("7","STATUS",O),("8","NETLIGHT",O),("9","DTR",I),("10","RTS",I)],
+    desc="4G LTE module placeholder (e.g. Quectel EC200U)"), "MODULE_4G")
+
+# STM32F407VGT6 LQFP-100
+_reg(_box("STM32F407", "U",
+    left=[("19","PA0",I),("20","PA1",I),("21","PA2",B),("22","PA3",I),
+          ("23","PA4",B),("24","PA5",I),("26","PA7",I),
+          ("14","PC1",B),("27","PC4",I),("28","PC5",I),
+          ("33","PB11",O),("37","PB12",O),("38","PB13",O),
+          ("46","PA9/TX1",O),("47","PA10/RX1",I),
+          ("61","PD5/TX2",O),("62","PD6/RX2",I),
+          ("48","PA11/USB-",B),("49","PA12/USB+",B),
+          ("52","PA13/SWDIO",B),("53","PA14/SWCLK",I),
+          ("12","NRST",I)],
+    right=[("69","BOOT0",I),("74","PE0",O),("75","PE1",O),("76","PE2",O),
+           ("77","PE3",O),("78","PE4",O),("79","PE5",O),
+           ("80","PE7",B),("82","PE8",B),("83","PE9",B),("84","PE10",O),
+           ("67","PB6/SCL",B),("68","PB7/SDA",B),
+           ("54","PA15/NSS",B),("64","PB3/SCK",B),
+           ("65","PB4/MISO",B),("66","PB5/MOSI",B)],
+    top=[("6","VBAT",PI),("18","VDDA",PI),("36","VDD1",PI),
+         ("51","VDD2",PI),("73","VDD3",PI),("94","VDD4",PI)],
+    bottom=[("17","VSSA",PI),("35","VSS1",PI),("50","VSS2",PI),
+            ("72","VSS3",PI),("93","VSS4",PI),("99","VSS5",PI),
+            ("10","OSC_IN",I),("11","OSC_OUT",O)],
+    desc="STM32F407VGT6 LQFP-100 ARM Cortex-M4 168MHz"), "LQFP-100")
+
+# LAN8720A Ethernet PHY QFN-24
+_reg(_box("LAN8720", "U",
+    left=[("1","RXD0",I),("2","RXD1",I),("3","CRS_DV",I),
+          ("4","MDC",B),("5","MDIO",B),("6","REFCLK",I)],
+    right=[("11","TXD0",O),("12","TXD1",O),("13","TX_EN",O)],
+    top=[("24","VDDIO",PI),("23","VDDA",PI)],
+    bottom=[("18","GND1",PI),("17","GND2",PI)],
+    desc="LAN8720A Ethernet PHY QFN-24"), "QFN-24")
+
+# THVD2450 RS485 transceiver SOIC-8
+_reg(_box("THVD2450", "U",
+    left=[("1","RO",O),("2","RE",I),("3","DE",I),("4","DI",I)],
+    right=[("6","Y",O),("7","Z",O)],
+    top=[("5","VCC",PI)], bottom=[("8","GND",PI)],
+    desc="THVD2450 RS485 transceiver SOIC-8"), "SOIC-8")
+
+# DS3231 RTC SOIC-8
+_reg(_box("DS3231", "U",
+    left=[("3","32K",O),("4","SQW",O),("5","SCL",B),("6","SDA",B)],
+    right=[],
+    top=[("2","VCC",PI)], bottom=[("1","GND",PI)],
+    desc="DS3231 RTC SOIC-8"), "SOIC-8")
+
+# 24LC256 EEPROM SOIC-8
+_reg(_box("24LC256", "U",
+    left=[("1","A0",I),("2","A1",I),("3","A2",I),("4","VSS",PI)],
+    right=[("8","VCC",PI),("7","WP",I),("6","SCL",B),("5","SDA",B)],
+    desc="24LC256 EEPROM SOIC-8"), "SOIC-8")
+
+# PC817 Optocoupler DIP-4
+_reg(_box("PC817", "U",
+    left=[("1","A",I),("2","K",P)],
+    right=[("4","C",O),("3","E",PI)],
+    desc="PC817 optocoupler DIP-4"), "DIP-4")
+
+# Relay 5-pin DPST
+
+_reg(_box("PWR_FLAG", "#FLG",
+    left=[],
+    right=[("1","",PO)],
+    desc="Power flag"), "PWR_FLAG")
+FOOTPRINTS["PWR_FLAG"] = FootprintDef(key="PWR_FLAG", pads=[
+    PadDef("1", 0, 0, 0.001, 0.001, shape="rect", ptype="smd")
+], attr="virtual", courtyard=(-0.1,-0.1,0.1,0.1), description="Power flag")
+
+_reg(_box("Battery", "BT",
+    left=[("1","+",PI),("2","-",PI)],
+    desc="Coin cell battery holder"), "Battery")
+FOOTPRINTS["Battery"] = FootprintDef(key="Battery", pads=[
+    PadDef("1", -2.54, 0, 1.5, 1.5, shape="roundrect", ptype="thru_hole", drill=0.8),
+    PadDef("2", 2.54, 0, 1.5, 1.5, shape="oval", ptype="thru_hole", drill=0.8),
+], attr="through_hole", courtyard=(-5, -3, 5, 3), description="CR1220 battery holder")
+
+_reg(_box("RELAY", "K",
+    left=[("1","COIL+","passive"),("2","COIL-","passive")],
+    right=[("3","COM","passive"),("4","NO","passive"),("5","NC","passive")],
+    desc="5-pin relay DPST"), "Relay")
 
 
 def get_part(part_key: str) -> dict:

@@ -1,4 +1,4 @@
-"""PCB placement: keep functional blocks together, connectors at board edge."""
+"""PCB placement with engineering heuristics for industrial controller."""
 from __future__ import annotations
 
 import math
@@ -6,14 +6,15 @@ import random
 from dataclasses import dataclass, field
 
 from ..core.circuit import Circuit, is_gnd_net, is_power_net
-from ..library.parts import FootprintDef, GRID, get_part, get_symbol, resolve_footprint
+from ..library.parts import FootprintDef, get_part, resolve_footprint
 
-# PCB grid in mm.
 PCB_GRID = 0.5
-PCB_MARGIN = 2.0
+BOARD_MARGIN = 4.0
+CONN_MARGIN = 1.0
+GAP = 6.0
 
 
-def snap_pcb(v: float) -> float:
+def snap(v: float) -> float:
     return round(v / PCB_GRID) * PCB_GRID
 
 
@@ -23,29 +24,33 @@ class PlacedFootprint:
     fp: FootprintDef
     x: float = 0.0
     y: float = 0.0
-    angle: float = 0.0  # 0/90/180/270
+    angle: float = 0.0
     block: str = "main"
-    side: str = "front"  # front | back
-
-    def pin_world(self, pin_num: str) -> tuple[float, float]:
-        for p in self.fp.pads:
-            if p.number == str(pin_num):
-                return self._rotate(p.x, p.y)
-        raise ValueError(f"{self.ref}: pad {pin_num} not found")
+    side: str = "front"
 
     def _rotate(self, px: float, py: float) -> tuple[float, float]:
         rad = math.radians(self.angle)
         c, s = math.cos(rad), math.sin(rad)
-        return (round(self.x + px * c - py * s, 3),
-                round(self.y + px * s + py * c, 3))
+        return (self.x + px * c - py * s, self.y + px * s + py * c)
 
-    def courtyard_world(self) -> tuple[float, float, float, float]:
+    def pin_world(self, pin_num: str) -> tuple[float, float]:
+        for p in self.fp.pads:
+            if p.number == str(pin_num):
+                x, y = self._rotate(p.x, p.y)
+                return (round(x, 3), round(y, 3))
+        raise ValueError(f"{self.ref}: pad {pin_num} not found")
+
+    def bbox(self, margin: float = 0.0) -> tuple[float, float, float, float]:
         cx1, cy1, cx2, cy2 = self.fp.courtyard
         pts = [self._rotate(cx1, cy1), self._rotate(cx1, cy2),
                self._rotate(cx2, cy1), self._rotate(cx2, cy2)]
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
-        return (min(xs), min(ys), max(xs), max(ys))
+        return (min(xs) - margin, min(ys) - margin,
+                max(xs) + margin, max(ys) + margin)
+
+    def courtyard_world(self) -> tuple[float, float, float, float]:
+        return self.bbox(0.0)
 
 
 @dataclass
@@ -57,164 +62,216 @@ class PCBLayout:
     board_y2: float = 50.0
 
 
-def _fp_area(fp: FootprintDef) -> float:
-    return fp.size()[0] * fp.size()[1]
-
-
 def _overlaps(a: tuple, b: tuple) -> bool:
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
-def _courtyard_overlap(p1: PlacedFootprint, p2: PlacedFootprint) -> float:
-    a = p1.courtyard_world()
-    b = p2.courtyard_world()
-    if not _overlaps(a, b):
-        return 0.0
-    dx = min(a[2], b[2]) - max(a[0], b[0])
-    dy = min(a[3], b[3]) - max(a[1], b[1])
-    return dx * dy
+def _is_connector(comp) -> bool:
+    p = comp.part
+    return p.startswith(("CONN", "TERMINAL", "USB", "RJ45", "SIM"))
 
 
-def _hpwl(circuit: Circuit, layout: PCBLayout) -> float:
-    total = 0.0
-    for net, pins in circuit.nets.items():
-        if is_gnd_net(net) or len(pins) < 2:
-            continue
-        xs = []
-        ys = []
-        for ref, pin in pins:
-            if ref not in layout.placed:
-                continue
-            x, y = layout.placed[ref].pin_world(pin)
-            xs.append(x)
-            ys.append(y)
-        if xs:
-            total += (max(xs) - min(xs)) + (max(ys) - min(ys))
-    return total
+def _is_passive(comp) -> bool:
+    return comp.part in ("R", "C", "C_POL", "L", "LED", "D", "D_SCHOTTKY", "D_ZENER")
 
 
-def _decoupling_penalty(circuit: Circuit, layout: PCBLayout) -> float:
-    pen = 0.0
-    for ref, comp in circuit.components.items():
-        if comp.part not in ("C",):
-            continue
-        # Find IC on same VCC/GND net.
-        ic_ref = None
-        for net, pins in circuit.nets.items():
-            if not (is_power_net(net) or is_gnd_net(net)):
-                continue
-            refs = [r for r, _ in pins]
-            if ref in refs:
-                ic_ref = next((r for r in refs if r != ref and
-                               get_part(circuit.components[r].part)["ref_prefix"] == "U"), None)
-                if ic_ref:
-                    break
-        if ic_ref and ic_ref in layout.placed:
-            x1, y1 = layout.placed[ref].x, layout.placed[ref].y
-            x2, y2 = layout.placed[ic_ref].x, layout.placed[ic_ref].y
-            dist = abs(x1 - x2) + abs(y1 - y2)
-            if dist > 10.0:
-                pen += (dist - 10.0) * 5.0
-    return pen
+def _is_ic(comp) -> bool:
+    return get_part(comp.part)["ref_prefix"] in ("U", "Q", "K", "Y")
 
 
-def _score(circuit: Circuit, layout: PCBLayout) -> float:
-    overlap = 0.0
-    items = list(layout.placed.values())
-    for i in range(len(items)):
-        for j in range(i + 1, len(items)):
-            overlap += _courtyard_overlap(items[i], items[j]) * 1000.0
-    return _hpwl(circuit, layout) + overlap + _decoupling_penalty(circuit, layout)
+def _fp_size(fp: FootprintDef) -> tuple[float, float]:
+    cx1, cy1, cx2, cy2 = fp.courtyard
+    return (cx2 - cx1, cy2 - cy1)
 
 
-def _random_move(layout: PCBLayout, ref: str, rng: random.Random) -> tuple[float, float, float]:
-    p = layout.placed[ref]
-    old = (p.x, p.y, p.angle)
-    p.x = snap_pcb(rng.uniform(layout.board_x1 + PCB_MARGIN, layout.board_x2 - PCB_MARGIN))
-    p.y = snap_pcb(rng.uniform(layout.board_y1 + PCB_MARGIN, layout.board_y2 - PCB_MARGIN))
-    if rng.random() < 0.3:
-        p.angle = rng.choice([0, 90, 180, 270])
-    return old
+class Shelf:
+    """Simple rectangle packer in a zone."""
+    def __init__(self, x1: float, y1: float, x2: float, y2: float):
+        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
+        self.cursor_x = x1
+        self.cursor_y = y1
+        self.row_h = 0.0
+        self.items: list[PlacedFootprint] = []
+
+    def pack(self, pf: PlacedFootprint, gap: float = GAP) -> bool:
+        w, h = _fp_size(pf.fp)
+        # try current row
+        if self.cursor_x + w + gap > self.x2:
+            self.cursor_x = self.x1
+            self.cursor_y += self.row_h + gap
+            self.row_h = 0.0
+        if self.cursor_y + h + gap > self.y2:
+            return False
+        # center at cursor + half size (courtyard may not be centered)
+        cx1, cy1, cx2, cy2 = pf.fp.courtyard
+        pf.x = snap(self.cursor_x - cx1)
+        pf.y = snap(self.cursor_y - cy1)
+        self.items.append(pf)
+        self.cursor_x += w + gap
+        self.row_h = max(self.row_h, h)
+        return True
 
 
-def _initial_guess(circuit: Circuit) -> PCBLayout:
-    layout = PCBLayout()
-    blocks = circuit.blocks()
-    order = [b for b in circuit.block_order if b in blocks] + [b for b in blocks if b not in circuit.block_order]
+def _clamp(layout: PCBLayout):
+    for pf in layout.placed.values():
+        bb = pf.bbox(BOARD_MARGIN)
+        dx, dy = 0.0, 0.0
+        if bb[0] < layout.board_x1:
+            dx = layout.board_x1 - bb[0]
+        if bb[2] > layout.board_x2:
+            dx = layout.board_x2 - bb[2]
+        if bb[1] < layout.board_y1:
+            dy = layout.board_y1 - bb[1]
+        if bb[3] > layout.board_y2:
+            dy = layout.board_y2 - bb[3]
+        pf.x += dx
+        pf.y += dy
 
-    # Auto board size.
-    total_area = sum(_fp_area(resolve_footprint(c.part, c.footprint)) for c in circuit.components.values())
-    target_area = total_area * 6.0
-    side = snap_pcb(math.sqrt(target_area) + 2 * PCB_MARGIN)
-    bw, bh = circuit.board_width, circuit.board_height
-    if bw <= 0:
-        bw = side
-    if bh <= 0:
-        bh = side
-    layout.board_x2 = snap_pcb(bw)
-    layout.board_y2 = snap_pcb(bh)
 
-    # Seed connectors at left/right edges.
-    left_x = layout.board_x1 + PCB_MARGIN
-    right_x = layout.board_x2 - PCB_MARGIN
-    y_cursor = layout.board_y1 + PCB_MARGIN
-    placed = []
-    for ref, comp in circuit.components.items():
+def _place_group(circuit: Circuit, refs: list[str], shelf: Shelf, layout: PCBLayout, angle: float = 0.0):
+    for ref in refs:
+        comp = circuit.components[ref]
         fp = resolve_footprint(comp.part, comp.footprint)
-        pf = PlacedFootprint(ref=ref, fp=fp, block=comp.block)
-        # rough seed: connectors near edge, others random.
-        if comp.part.startswith("CONN") or comp.part.startswith("TERMINAL") or comp.part.startswith("USB"):
-            pf.x = left_x if "INPUT" in comp.block.upper() else right_x
-            pf.y = snap_pcb(y_cursor)
-            y_cursor += fp.size()[1] + 2.0
-        else:
-            pf.x = snap_pcb((layout.board_x1 + layout.board_x2) / 2 + rng_seed.uniform(-10, 10))
-            pf.y = snap_pcb((layout.board_y1 + layout.board_y2) / 2 + rng_seed.uniform(-10, 10))
-        placed.append(pf)
+        pf = PlacedFootprint(ref=ref, fp=fp, angle=angle, block=comp.block)
+        if not shelf.pack(pf):
+            # fallback center
+            cx, cy = (shelf.x1 + shelf.x2) / 2, (shelf.y1 + shelf.y2) / 2
+            cx1, cy1, cx2, cy2 = pf.fp.courtyard
+            pf.x = snap(cx - (cx1 + cx2) / 2)
+            pf.y = snap(cy - (cy1 + cy2) / 2)
         layout.placed[ref] = pf
 
-    # Move connectors inside board bounds if needed.
-    for pf in layout.placed.values():
-        cx1, cy1, cx2, cy2 = pf.courtyard_world()
-        if cx1 < layout.board_x1:
-            pf.x += layout.board_x1 - cx1
-        if cy1 < layout.board_y1:
-            pf.y += layout.board_y1 - cy1
-        if cx2 > layout.board_x2:
-            pf.x -= cx2 - layout.board_x2
-        if cy2 > layout.board_y2:
-            pf.y -= cy2 - layout.board_y2
-    return layout
 
 
-rng_seed = random.Random(42)
 
-
-def _simulated_annealing(circuit: Circuit, layout: PCBLayout, iterations: int = 600) -> PCBLayout:
-    rng = random.Random(42)
-    best = {ref: (p.x, p.y, p.angle) for ref, p in layout.placed.items()}
-    best_score = _score(circuit, layout)
-    current_score = best_score
-    T0 = best_score * 0.05 if best_score > 0 else 10.0
-    for i in range(iterations):
-        T = T0 * (1 - i / iterations)
-        ref = rng.choice(list(layout.placed.keys()))
-        old = _random_move(layout, ref, rng)
-        s = _score(circuit, layout)
-        delta = s - current_score
-        if delta < 0 or rng.random() < math.exp(-delta / (T + 1e-9)):
-            current_score = s
-            if s < best_score:
-                best_score = s
-                best = {ref: (p.x, p.y, p.angle) for ref, p in layout.placed.items()}
-        else:
-            p = layout.placed[ref]
-            p.x, p.y, p.angle = old
-    for ref, state in best.items():
-        layout.placed[ref].x, layout.placed[ref].y, layout.placed[ref].angle = state
-    return layout
-
+def _legalize(layout: PCBLayout, circuit: Circuit, max_iter: int = 100):
+    refs = list(layout.placed.keys())
+    for _ in range(max_iter):
+        moved = False
+        for i, ra in enumerate(refs):
+            pa = layout.placed[ra]
+            a = pa.bbox(1.0)
+            # board clamp
+            dx, dy = 0.0, 0.0
+            if a[0] < layout.board_x1:
+                dx = layout.board_x1 - a[0]
+            if a[2] > layout.board_x2:
+                dx = layout.board_x2 - a[2]
+            if a[1] < layout.board_y1:
+                dy = layout.board_y1 - a[1]
+            if a[3] > layout.board_y2:
+                dy = layout.board_y2 - a[3]
+            if dx or dy:
+                pa.x += dx; pa.y += dy; moved = True
+                a = pa.bbox(1.0)
+            for rb in refs[i+1:]:
+                pb = layout.placed[rb]
+                b = pb.bbox(1.0)
+                if not _overlaps(a, b):
+                    continue
+                dx = min(a[2], b[2]) - max(a[0], b[0])
+                dy = min(a[3], b[3]) - max(a[1], b[1])
+                if dx < dy:
+                    sep = dx / 2 + 0.5
+                    if pa.x < pb.x:
+                        pa.x -= sep; pb.x += sep
+                    else:
+                        pa.x += sep; pb.x -= sep
+                else:
+                    sep = dy / 2 + 0.5
+                    if pa.y < pb.y:
+                        pa.y -= sep; pb.y += sep
+                    else:
+                        pa.y += sep; pb.y -= sep
+                pa.x = snap(pa.x); pa.y = snap(pa.y)
+                pb.x = snap(pb.x); pb.y = snap(pb.y)
+                moved = True
+        if not moved:
+            break
+    _clamp(layout)
 
 def place_pcb(circuit: Circuit) -> PCBLayout:
-    layout = _initial_guess(circuit)
-    return _simulated_annealing(circuit, layout)
+    bw = max(circuit.board_width, 100.0)
+    bh = max(circuit.board_height, 80.0)
+    layout = PCBLayout(board_x2=bw, board_y2=bh)
+    comps = circuit.components
+
+    def refs(*blocks):
+        out = []
+        for b in blocks:
+            out += [r for r, c in comps.items() if c.block == b]
+        return out
+
+    def conn_refs(*blocks):
+        return [r for r in refs(*blocks) if _is_connector(comps[r])]
+
+    def other_refs(*blocks):
+        return [r for r in refs(*blocks) if not _is_connector(comps[r])]
+
+    # --- 1. Connectors at edges ---
+    # left edge: power + DI + AI terminals, pins inward, body flush with left edge
+    left_shelf = Shelf(CONN_MARGIN, 10.0, 50.0, bh - 10.0)
+    _place_group(circuit, conn_refs("power") + conn_refs("di") + conn_refs("ai"), left_shelf, layout, angle=0)
+
+    # top edge: relay output terminals, body flush with top edge
+    top_shelf = Shelf(55.0, bh - 26.0, bw - 55.0, bh - CONN_MARGIN)
+    _place_group(circuit, conn_refs("relay"), top_shelf, layout, angle=0)
+
+    # right edge: comm connectors (USB, RJ45, RS485 terminal), body flush with right edge
+    right_shelf = Shelf(bw - 50.0, 10.0, bw - CONN_MARGIN, bh - 10.0)
+    _place_group(circuit, conn_refs("usb", "eth", "rs485") + conn_refs("cell"), right_shelf, layout, angle=0)
+
+    # --- 2. MCU center ---
+    mcu_ref = next((r for r, c in comps.items() if c.block == "mcu" and c.part == "STM32F407"), None)
+    if mcu_ref:
+        fp = resolve_footprint(comps[mcu_ref].part, comps[mcu_ref].footprint)
+        pf = PlacedFootprint(ref=mcu_ref, fp=fp, angle=0, block="mcu")
+        cx1, cy1, cx2, cy2 = fp.courtyard
+        pf.x = snap(bw / 2 - (cx1 + cx2) / 2)
+        pf.y = snap(bh / 2 - (cy1 + cy2) / 2)
+        layout.placed[mcu_ref] = pf
+
+    # --- 3. Power section bottom-left ---
+    power_shelf = Shelf(55.0, CONN_MARGIN, 140.0, 45.0)
+    _place_group(circuit, other_refs("power"), power_shelf, layout)
+
+    # --- 4. Relay drivers above MCU / top-center ---
+    relay_shelf = Shelf(55.0, bh - 90.0, bw - 55.0, bh - 28.0)
+    _place_group(circuit, other_refs("relay"), relay_shelf, layout)
+
+    # --- 5. Communication ICs right-center ---
+    comm_shelf = Shelf(bw - 145.0, 50.0, bw - 55.0, bh - 95.0)
+    _place_group(circuit, other_refs("rs485", "eth", "cell"), comm_shelf, layout)
+
+    # --- 6. Analog front-end left-center (away from switching) ---
+    analog_shelf = Shelf(55.0, 50.0, 140.0, bh - 95.0)
+    _place_group(circuit, other_refs("ai") + other_refs("di"), analog_shelf, layout)
+
+    # --- 7. MCU support around MCU ---
+    mcu_support = [r for r in refs("mcu") if r not in layout.placed]
+    # place in a ring around MCU using small zones
+    mcu_shelf = Shelf(140.0, 50.0, bw - 145.0, bh - 95.0)
+    _place_group(circuit, mcu_support, mcu_shelf, layout)
+
+    # --- 8. RTC / battery bottom-right, quiet corner ---
+    rtc_shelf = Shelf(bw - 145.0, CONN_MARGIN, bw - 55.0, 45.0)
+    _place_group(circuit, refs("rtc"), rtc_shelf, layout)
+
+    # --- 9. Indicators visible near top-right ---
+    ind_shelf = Shelf(bw - 100.0, bh - 50.0, bw - 55.0, bh - 28.0)
+    _place_group(circuit, refs("ind"), ind_shelf, layout)
+
+    # --- 10. Anything else to center ---
+    for ref, comp in comps.items():
+        if ref in layout.placed:
+            continue
+        fp = resolve_footprint(comp.part, comp.footprint)
+        pf = PlacedFootprint(ref=ref, fp=fp, angle=0, block=comp.block)
+        cx1, cy1, cx2, cy2 = pf.fp.courtyard
+        pf.x = snap(bw / 2 - (cx1 + cx2) / 2)
+        pf.y = snap(bh / 2 - (cy1 + cy2) / 2)
+        layout.placed[ref] = pf
+
+    _clamp(layout)
+    _legalize(layout, circuit)
+    return layout

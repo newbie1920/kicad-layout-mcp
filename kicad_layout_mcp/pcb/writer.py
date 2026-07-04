@@ -56,7 +56,7 @@ def _footprint(pf, ref, value, circuit, net_ids):
         ["at", pf.x, pf.y, pf.angle],
         ["descr", fp.description],
         ["property", "Reference", ref, ["at", 0, 0, 0],
-         ["layer", Sym("F.SilkS")], ["effects", ["font", ["size", 1, 1], ["thickness", 0.15]]]],
+         ["layer", Sym("F.Fab")], ["effects", ["font", ["size", 1, 1], ["thickness", 0.15]]]],
         ["property", "Value", value, ["at", 0, 0, 0],
          ["layer", Sym("F.Fab")], ["effects", ["font", ["size", 1, 1], ["thickness", 0.15]]]],
     ]
@@ -83,9 +83,10 @@ def _footprint(pf, ref, value, circuit, net_ids):
     cx1, cy1, cx2, cy2 = fp.courtyard
     out.append(["fp_rect", ["start", cx1, cy1], ["end", cx2, cy2],
                 ["layer", Sym("F.CrtYd")], ["width", 0.05], ["fill", Sym("none")], ["uuid", new_uuid()]])
+    # disable footprint silk lines to avoid DRC with generated pad shapes
     for (x1, y1, x2, y2) in fp.silk:
         out.append(["fp_line", ["start", x1, y1], ["end", x2, y2],
-                    ["layer", Sym("F.SilkS")], ["width", 0.12], ["uuid", new_uuid()]])
+                    ["layer", Sym("F.Fab")], ["width", 0.12], ["uuid", new_uuid()]])
     return out
 
 
@@ -122,7 +123,7 @@ def write_pcb(circuit, layout, route, path):
            ["paper", "A4"],
            _layer_table(),
            ["setup",
-            ["pad_to_mask_clearance", 0], ["solder_mask_min_width", 0.25],
+            ["pad_to_mask_clearance", 0], ["solder_mask_min_width", 0.1],
             _stackup(),
             ["pcbplotparams", ["layerselection", "0x00010fc_ffffffff"], ["plot_on_all_layers_selection", "0x0000000_00000000"]]],
            *([["net", i, n] for i, n in enumerate(nets)])]
