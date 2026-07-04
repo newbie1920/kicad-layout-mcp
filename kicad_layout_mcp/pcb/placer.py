@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import math
-import random
 from dataclasses import dataclass, field
 
-from ..core.circuit import Circuit, is_gnd_net, is_power_net
+from ..core.circuit import Circuit
 from ..library.parts import FootprintDef, get_part, resolve_footprint
 
 PCB_GRID = 0.5
@@ -79,37 +78,73 @@ def _is_ic(comp) -> bool:
     return get_part(comp.part)["ref_prefix"] in ("U", "Q", "K", "Y")
 
 
-def _fp_size(fp: FootprintDef) -> tuple[float, float]:
-    cx1, cy1, cx2, cy2 = fp.courtyard
-    return (cx2 - cx1, cy2 - cy1)
+def _set_edge_pos(pf: PlacedFootprint, edge: str, board: tuple):
+    """Align rotated bbox to a board edge."""
+    bx1, by1, bx2, by2 = board
+    # compute bbox with current x,y
+    bb = pf.bbox(0.0)
+    if edge == "left":
+        pf.x += (bx1 + CONN_MARGIN) - bb[0]
+    elif edge == "right":
+        pf.x += (bx2 - CONN_MARGIN) - bb[2]
+    elif edge == "top":
+        pf.y += (by2 - CONN_MARGIN) - bb[3]
+    elif edge == "bottom":
+        pf.y += (by1 + CONN_MARGIN) - bb[1]
 
 
-class Shelf:
-    """Simple rectangle packer in a zone."""
-    def __init__(self, x1: float, y1: float, x2: float, y2: float):
-        self.x1, self.y1, self.x2, self.y2 = x1, y1, x2, y2
-        self.cursor_x = x1
-        self.cursor_y = y1
-        self.row_h = 0.0
-        self.items: list[PlacedFootprint] = []
+def _place_edge_stack(circuit: Circuit, refs: list[str], layout: PCBLayout,
+                      edge: str, start: float, stop: float, axis: str):
+    """Stack connectors along an edge. axis='x' means horizontal stack (top/bottom edges)."""
+    cursor = start
+    for ref in refs:
+        comp = circuit.components[ref]
+        fp = resolve_footprint(comp.part, comp.footprint)
+        pf = PlacedFootprint(ref=ref, fp=fp, angle=0, block=comp.block)
+        # initial temporary position
+        pf.x = 0.0
+        pf.y = 0.0
+        # choose angle per edge
+        if edge in ("left", "right"):
+            pf.angle = 90
+        # stack coordinate
+        if axis == "x":
+            pf.x = cursor
+        else:
+            pf.y = cursor
+        _set_edge_pos(pf, edge, (layout.board_x1, layout.board_y1, layout.board_x2, layout.board_y2))
+        layout.placed[ref] = pf
+        # advance cursor by bbox extent on axis + gap
+        bb = pf.bbox(GAP)
+        cursor = bb[3] if axis == "y" else bb[2]
+        if cursor > stop:
+            cursor = start  # overflow, will overlap but keep within edge
 
-    def pack(self, pf: PlacedFootprint, gap: float = GAP) -> bool:
-        w, h = _fp_size(pf.fp)
-        # try current row
-        if self.cursor_x + w + gap > self.x2:
-            self.cursor_x = self.x1
-            self.cursor_y += self.row_h + gap
-            self.row_h = 0.0
-        if self.cursor_y + h + gap > self.y2:
-            return False
-        # center at cursor + half size (courtyard may not be centered)
+
+def _place_group(circuit: Circuit, refs: list[str], layout: PCBLayout,
+                 x1: float, y1: float, x2: float, y2: float):
+    cursor_x = x1
+    cursor_y = y1
+    row_h = 0.0
+    for ref in refs:
+        comp = circuit.components[ref]
+        fp = resolve_footprint(comp.part, comp.footprint)
+        pf = PlacedFootprint(ref=ref, fp=fp, angle=0, block=comp.block)
         cx1, cy1, cx2, cy2 = pf.fp.courtyard
-        pf.x = snap(self.cursor_x - cx1)
-        pf.y = snap(self.cursor_y - cy1)
-        self.items.append(pf)
-        self.cursor_x += w + gap
-        self.row_h = max(self.row_h, h)
-        return True
+        w, h = cx2 - cx1, cy2 - cy1
+        if cursor_x + w + GAP > x2:
+            cursor_x = x1
+            cursor_y += row_h + GAP
+            row_h = 0.0
+        if cursor_y + h + GAP > y2:
+            # fallback: dump at center of zone
+            cursor_x = (x1 + x2) / 2 - w / 2
+            cursor_y = (y1 + y2) / 2 - h / 2
+        pf.x = snap(cursor_x - cx1)
+        pf.y = snap(cursor_y - cy1)
+        layout.placed[ref] = pf
+        cursor_x += w + GAP
+        row_h = max(row_h, h)
 
 
 def _clamp(layout: PCBLayout):
@@ -128,30 +163,13 @@ def _clamp(layout: PCBLayout):
         pf.y += dy
 
 
-def _place_group(circuit: Circuit, refs: list[str], shelf: Shelf, layout: PCBLayout, angle: float = 0.0):
-    for ref in refs:
-        comp = circuit.components[ref]
-        fp = resolve_footprint(comp.part, comp.footprint)
-        pf = PlacedFootprint(ref=ref, fp=fp, angle=angle, block=comp.block)
-        if not shelf.pack(pf):
-            # fallback center
-            cx, cy = (shelf.x1 + shelf.x2) / 2, (shelf.y1 + shelf.y2) / 2
-            cx1, cy1, cx2, cy2 = pf.fp.courtyard
-            pf.x = snap(cx - (cx1 + cx2) / 2)
-            pf.y = snap(cy - (cy1 + cy2) / 2)
-        layout.placed[ref] = pf
-
-
-
-
-def _legalize(layout: PCBLayout, circuit: Circuit, max_iter: int = 100):
+def _legalize(layout: PCBLayout, max_iter: int = 100):
     refs = list(layout.placed.keys())
     for _ in range(max_iter):
         moved = False
         for i, ra in enumerate(refs):
             pa = layout.placed[ra]
-            a = pa.bbox(1.0)
-            # board clamp
+            a = pa.bbox(2.0)
             dx, dy = 0.0, 0.0
             if a[0] < layout.board_x1:
                 dx = layout.board_x1 - a[0]
@@ -163,22 +181,21 @@ def _legalize(layout: PCBLayout, circuit: Circuit, max_iter: int = 100):
                 dy = layout.board_y2 - a[3]
             if dx or dy:
                 pa.x += dx; pa.y += dy; moved = True
-                a = pa.bbox(1.0)
-            for rb in refs[i+1:]:
+                a = pa.bbox(2.0)
+            for rb in refs[i + 1:]:
                 pb = layout.placed[rb]
-                b = pb.bbox(1.0)
+                b = pb.bbox(2.0)
                 if not _overlaps(a, b):
                     continue
                 dx = min(a[2], b[2]) - max(a[0], b[0])
                 dy = min(a[3], b[3]) - max(a[1], b[1])
+                sep = dx / 2 + 0.5 if dx < dy else dy / 2 + 0.5
                 if dx < dy:
-                    sep = dx / 2 + 0.5
                     if pa.x < pb.x:
                         pa.x -= sep; pb.x += sep
                     else:
                         pa.x += sep; pb.x -= sep
                 else:
-                    sep = dy / 2 + 0.5
                     if pa.y < pb.y:
                         pa.y -= sep; pb.y += sep
                     else:
@@ -190,9 +207,23 @@ def _legalize(layout: PCBLayout, circuit: Circuit, max_iter: int = 100):
             break
     _clamp(layout)
 
+
+def _auto_board_size(layout: PCBLayout, margin: float = BOARD_MARGIN):
+    if not layout.placed:
+        return
+    xs, ys = [], []
+    for pf in layout.placed.values():
+        bb = pf.bbox(margin)
+        xs += [bb[0], bb[2]]
+        ys += [bb[1], bb[3]]
+    layout.board_x2 = snap(max(xs))
+    layout.board_y2 = snap(max(ys))
+
+
 def place_pcb(circuit: Circuit) -> PCBLayout:
-    bw = max(circuit.board_width, 100.0)
-    bh = max(circuit.board_height, 80.0)
+    # initial board large; auto size later
+    bw = 240.0
+    bh = 180.0
     layout = PCBLayout(board_x2=bw, board_y2=bh)
     comps = circuit.components
 
@@ -208,20 +239,23 @@ def place_pcb(circuit: Circuit) -> PCBLayout:
     def other_refs(*blocks):
         return [r for r in refs(*blocks) if not _is_connector(comps[r])]
 
-    # --- 1. Connectors at edges ---
-    # left edge: power + DI + AI terminals, pins inward, body flush with left edge
-    left_shelf = Shelf(CONN_MARGIN, 10.0, 50.0, bh - 10.0)
-    _place_group(circuit, conn_refs("power") + conn_refs("di") + conn_refs("ai"), left_shelf, layout, angle=0)
+    # --- Connectors at edges, flush and oriented outward ---
+    # left: power + DI + AI terminals, rotated 90, wire entry left
+    left_refs = conn_refs("power") + conn_refs("di") + conn_refs("ai")
+    _place_edge_stack(circuit, left_refs, layout, "left", 10.0, bh - 10.0, axis="y")
 
-    # top edge: relay output terminals, body flush with top edge
-    top_shelf = Shelf(55.0, bh - 26.0, bw - 55.0, bh - CONN_MARGIN)
-    _place_group(circuit, conn_refs("relay"), top_shelf, layout, angle=0)
+    # top: relay terminals, wire entry up
+    top_refs = conn_refs("relay")
+    _place_edge_stack(circuit, top_refs, layout, "top", 55.0, bw - 55.0, axis="x")
 
-    # right edge: comm connectors (USB, RJ45, RS485 terminal), body flush with right edge
-    right_shelf = Shelf(bw - 50.0, 10.0, bw - CONN_MARGIN, bh - 10.0)
-    _place_group(circuit, conn_refs("usb", "eth", "rs485") + conn_refs("cell"), right_shelf, layout, angle=0)
+    # right: RJ45, RS485 terminal, SIM, wire entry right
+    right_refs = conn_refs("eth", "rs485") + conn_refs("cell")
+    _place_edge_stack(circuit, right_refs, layout, "right", 10.0, bh - 10.0, axis="y")
+    # bottom: USB connector, opening down
+    usb_refs = conn_refs("usb")
+    _place_edge_stack(circuit, usb_refs, layout, "bottom", 55.0, bw - 55.0, axis="x")
 
-    # --- 2. MCU center ---
+    # MCU center
     mcu_ref = next((r for r, c in comps.items() if c.block == "mcu" and c.part == "STM32F407"), None)
     if mcu_ref:
         fp = resolve_footprint(comps[mcu_ref].part, comps[mcu_ref].footprint)
@@ -231,37 +265,29 @@ def place_pcb(circuit: Circuit) -> PCBLayout:
         pf.y = snap(bh / 2 - (cy1 + cy2) / 2)
         layout.placed[mcu_ref] = pf
 
-    # --- 3. Power section bottom-left ---
-    power_shelf = Shelf(55.0, CONN_MARGIN, 140.0, 45.0)
-    _place_group(circuit, other_refs("power"), power_shelf, layout)
+    # Power IC + passives bottom-left
+    _place_group(circuit, other_refs("power"), layout, 55.0, BOARD_MARGIN, 140.0, 45.0)
 
-    # --- 4. Relay drivers above MCU / top-center ---
-    relay_shelf = Shelf(55.0, bh - 90.0, bw - 55.0, bh - 28.0)
-    _place_group(circuit, other_refs("relay"), relay_shelf, layout)
+    # Relay drivers top-center
+    _place_group(circuit, other_refs("relay"), layout, 55.0, bh - 90.0, bw - 55.0, bh - 28.0)
 
-    # --- 5. Communication ICs right-center ---
-    comm_shelf = Shelf(bw - 145.0, 50.0, bw - 55.0, bh - 95.0)
-    _place_group(circuit, other_refs("rs485", "eth", "cell"), comm_shelf, layout)
+    # Comm ICs right-center
+    _place_group(circuit, other_refs("rs485", "eth", "cell"), layout, bw - 145.0, 50.0, bw - 55.0, bh - 95.0)
 
-    # --- 6. Analog front-end left-center (away from switching) ---
-    analog_shelf = Shelf(55.0, 50.0, 140.0, bh - 95.0)
-    _place_group(circuit, other_refs("ai") + other_refs("di"), analog_shelf, layout)
+    # Analog front-end left-center
+    _place_group(circuit, other_refs("ai") + other_refs("di"), layout, 55.0, 50.0, 140.0, bh - 95.0)
 
-    # --- 7. MCU support around MCU ---
+    # MCU support around MCU
     mcu_support = [r for r in refs("mcu") if r not in layout.placed]
-    # place in a ring around MCU using small zones
-    mcu_shelf = Shelf(140.0, 50.0, bw - 145.0, bh - 95.0)
-    _place_group(circuit, mcu_support, mcu_shelf, layout)
+    _place_group(circuit, mcu_support, layout, 140.0, 50.0, bw - 145.0, bh - 95.0)
 
-    # --- 8. RTC / battery bottom-right, quiet corner ---
-    rtc_shelf = Shelf(bw - 145.0, CONN_MARGIN, bw - 55.0, 45.0)
-    _place_group(circuit, refs("rtc"), rtc_shelf, layout)
+    # RTC bottom-right
+    _place_group(circuit, refs("rtc"), layout, bw - 145.0, BOARD_MARGIN, bw - 55.0, 45.0)
 
-    # --- 9. Indicators visible near top-right ---
-    ind_shelf = Shelf(bw - 100.0, bh - 50.0, bw - 55.0, bh - 28.0)
-    _place_group(circuit, refs("ind"), ind_shelf, layout)
+    # Indicators top-right
+    _place_group(circuit, refs("ind"), layout, bw - 100.0, bh - 50.0, bw - 55.0, bh - 28.0)
 
-    # --- 10. Anything else to center ---
+    # leftovers
     for ref, comp in comps.items():
         if ref in layout.placed:
             continue
@@ -272,6 +298,7 @@ def place_pcb(circuit: Circuit) -> PCBLayout:
         pf.y = snap(bh / 2 - (cy1 + cy2) / 2)
         layout.placed[ref] = pf
 
+    _auto_board_size(layout, BOARD_MARGIN)
     _clamp(layout)
-    _legalize(layout, circuit)
+    _legalize(layout)
     return layout
